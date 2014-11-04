@@ -10,7 +10,22 @@ module.exports = function(app) {
     // middleware stack.
     app.use(function(request, response, next) {
         var accessToken = request.session.accessToken;
-        next();
+        if (!accessToken) return next();
+        
+        AccessToken.findById(accessToken, function(err, token) {
+            if (err) return next();
+
+            // Get user data associated with the token
+            User.findById(token.userId, function(err, user) {
+                if (err) return next();
+                request.session.user = {
+                    fullName: user.fullName,
+                    phone: user.phone,
+                    email: user.email
+                };
+                next();
+            });
+        });
     });
 
     // Redirect to home page after an authentication error
@@ -63,6 +78,7 @@ module.exports = function(app) {
 
     // Display account details for an individual user
     app.get('/users/:id', /*auth,*/ function(request, response) {
+        response.send(request.param('id'));
         User.findById(request.param('id'), function(err, user) {
             response.render('user', {
                 fullName: user.fullName,
@@ -85,9 +101,8 @@ module.exports = function(app) {
         // Save a new user, unverified
         u.save(function(err) {
             if (err) {
-                response.status(500);
                 request.session.error = err;
-                response.redirect('/');
+                response.redirect('/signup');
             } else {
                 response.redirect('/users/' + u._id + '/verify');
             }
@@ -112,7 +127,7 @@ module.exports = function(app) {
             if (err) {
                 response.status(404);
                 response.redirect('/');
-            } else if (u && !u.confirmed && code === u.confimationCode) {
+            } else if (u && !u.confirmed && code === u.confirmationCode) {
                 // success
                 u.confirmed = true;
                 u.save(function(err, u) {
@@ -123,13 +138,13 @@ module.exports = function(app) {
                     });
 
                     tkn.save(function(err, doc) {
-                        request.session.token = doc;
-                        response.redirect('/users/'+request.user._id);
+                        request.session.accessToken = doc._id;
+                        response.redirect('/users/'+u._id);
                     });
                 });
             } else {
-                response.status(500);
-                response.send(err);
+                request.session.error = err;
+                response.redirect('/users/'+_id+'/verify');
             }
         });
     });
@@ -146,6 +161,11 @@ module.exports = function(app) {
 
     // Process verification code for a new access token
     app.post('/tokens/:id', csrfCheck, function(request, response) {
+
+    });
+
+    // Log out
+    app.post('/logout', csrfCheck, function(request, response) {
 
     });
 };

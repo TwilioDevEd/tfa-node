@@ -8,7 +8,7 @@ var config = require('../config');
 
 // Constants
 var SALT_WORK_FACTOR = 10; // protect password hash from brute force guessing
-var TOKEN_EXPIRY = 60 * 5; // expire confirmation tokens after five minutes
+var TOKEN_EXPIRY = 60 * 10; // expire confirmation tokens after ten minutes
 
 // A public service that simply echoes back TwiML that you pass it - we use
 // it here so we don't have to worry about knowing our app's URL ahead of time

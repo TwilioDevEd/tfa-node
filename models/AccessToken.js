@@ -17,6 +17,7 @@ var AccessTokenSchema = new Schema({
     }
 });
 
+
 AccessTokenSchema.pre('save', function(next) {
     var self = this;
     if (!self.token) {
@@ -25,10 +26,19 @@ AccessTokenSchema.pre('save', function(next) {
     if (!self.secret) {
         self.secret = crypto.randomBytes(32).toString('hex');
     }
+    next();
 });
 
 AccessTokenSchema.post('save', function() {
-    
+    var self = this;
+    if (!self.confirmed) {
+        self.sendToken();
+    }
 });
+
+AccessTokenSchema.methods.sendToken = function() {
+
+};
+
 
 module.exports = mongoose.model('AccessToken', AccessTokenSchema);
