@@ -1,0 +1,19 @@
+extends layout
+
+block content
+  h1 Verify Your Account
+
+  p.
+    Depending on your contact preference, we should be calling or texting your
+    mobile phone with a confirmation code. Enter that code here.
+
+  .row
+    .col-md-12
+      form(action='/users/'+id+'/verify', method='POST', role='form')
+        input(type='hidden', name='_csrf', value=csrfToken)
+
+        .form-group
+          label(for='code') Confirmation Code
+          input(type='text', name='code', class='form-control')
+
+        button(type='submit', class='btn btn-primary') Verify Account

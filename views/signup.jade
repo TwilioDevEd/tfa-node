@@ -1,0 +1,40 @@
+extends layout
+
+block content
+  h1 Sign Up For An Account
+
+  .row
+    .col-md-12
+      form(action='/users', method='POST', role='form')
+        input(type='hidden', name='_csrf', value=csrfToken)
+
+        .form-group
+          label(for='fullName') Your Full Name
+          input(type='text', name='fullName', class='form-control')
+
+        .form-group
+          label(for='email') Your E-Mail Address
+          input(type='text', name='email', class='form-control')
+
+        .form-group
+          label(for='phone') Your Phone Number
+          input(type='text', name='phone', class='form-control')
+
+        .form-group
+          label(for='password') Password
+          input(type='password', name='password', class='form-control')
+
+        .form-group
+          p Verify my phone number with...
+          .radio
+            label
+              input(type='radio', name='contactType', value='text', checked='')
+              span a text message.
+
+          .radio
+            label
+              input(type='radio', name='contactType', value='voice')
+              span a voice call.
+
+
+        button(type='submit', class='btn btn-primary') Create User

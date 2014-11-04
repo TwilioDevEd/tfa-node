@@ -1,0 +1,30 @@
+doctype 5
+html(lang='en')
+  head
+    title= title
+
+    // Twitter Bootstrap included for some basic styling
+    link(rel='stylesheet', 
+      href='//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css')
+    link(rel='stylesheet', 
+      href='//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css')
+
+    // App-specific stylesheet
+    link(rel='stylesheet', href='/main.css')
+
+  body
+    #main.container
+      // App nav - if we have a logged in account, 
+      nav(class='navbar navbar-default', role='navigation')
+        a(class='navbar-brand', href='/') TFA Demo
+        #account(class='navbar-right')
+          if user
+            p(class='navbar-text')= 'Hi There, ' + user.name + '!'
+          else
+            p(class='navbar-text')
+              a(href='/login') Log In
+              span &nbsp;or&nbsp;
+              a(href='/signup') Sign Up
+
+      // Yield to page content
+      block content

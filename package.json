@@ -1,0 +1,40 @@
+{
+  "name": "tfa-node",
+  "version": "0.0.1",
+  "description": "An example application demostrating two-factor authentication with node",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test | faucet"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TwilioDevEd/tfa-node"
+  },
+  "keywords": [
+    "twilio",
+    "authentication",
+    "passport",
+    "example"
+  ],
+  "author": "Kevin Whinnery",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TwilioDevEd/tfa-node/issues"
+  },
+  "homepage": "https://github.com/TwilioDevEd/tfa-node",
+  "dependencies": {
+    "bcrypt": "^0.8.0",
+    "body-parser": "^1.9.1",
+    "csurf": "^1.6.2",
+    "express": "^4.10.0",
+    "express-session": "^1.9.1",
+    "mongoose": "^3.8.18",
+    "morgan": "^1.4.1",
+    "speakeasy": "^1.0.3",
+    "twilio": "^1.7.0"
+  },
+  "devDependencies": {
+    "faucet": "0.0.1",
+    "tape": "^3.0.1"
+  }
+}
