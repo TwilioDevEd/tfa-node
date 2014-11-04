@@ -19,7 +19,12 @@ html(lang='en')
         a(class='navbar-brand', href='/') TFA Demo
         #account(class='navbar-right')
           if user
-            p(class='navbar-text')= 'Hi There, ' + user.name + '!'
+            p(class='navbar-text') Hi There, 
+              a(href='/users/#{user._id}')= user.fullName
+              span !
+              form.login(action='/logout', method='POST')
+                input(type='hidden', name='_csrf', value=csrfToken)
+                input.btn.btn-default.btn-sm(type='submit', value='Log Out')
           else
             p(class='navbar-text')
               a(href='/login') Log In

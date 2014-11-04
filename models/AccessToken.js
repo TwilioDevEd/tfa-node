@@ -3,11 +3,17 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var bcrypt = require('bcrypt');
 var speakeasy = require('speakeasy');
-var twilio = require('twilio');
-var config = require('../config');
+var User = require('./User');
+var sender = require('./codesender');
+
+// Constants
+var TOKEN_EXPIRY = 60 * 10; // expire confirmation tokens after ten minutes
 
 var AccessTokenSchema = new Schema({
-    token: String,
+    token: {
+        type: String,
+        index: { unique: true }
+    },
     userId: String,
     secret: String,
     confirmationCode: String,
@@ -29,15 +35,26 @@ AccessTokenSchema.pre('save', function(next) {
     next();
 });
 
-AccessTokenSchema.post('save', function() {
+AccessTokenSchema.methods.sendToken = function(cb) {
     var self = this;
-    if (!self.confirmed) {
-        self.sendToken();
-    }
-});
 
-AccessTokenSchema.methods.sendToken = function() {
+    // Create a new confirmation code
+    self.confirmationCode = speakeasy.totp({
+        key: self.secret,
+        step: TOKEN_EXPIRY
+    });
 
+    // Update confirmation code in the DB
+    self.save(function(err, doc) {
+        // Return with database error if needed
+        if (err) return cb(err);
+
+        // Now, get contact info for related user
+        User.findById(self.userId, function(err, user) {
+            if (err) return cb(err);
+            sender(user.contactType, self.confirmationCode, user.phone, cb);
+        });
+    });
 };
 
 

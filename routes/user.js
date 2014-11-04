@@ -7,22 +7,21 @@ module.exports = function(app) {
 
     // Middleware function to check for a valid access token and grab the 
     // appropriate user object. This is the main authentication pass for the
-    // middleware stack.
+    // middleware stack, other routes will reference request.user to determine
+    // login status
     app.use(function(request, response, next) {
         var accessToken = request.session.accessToken;
         if (!accessToken) return next();
-        
-        AccessToken.findById(accessToken, function(err, token) {
+
+        AccessToken.findOne({
+            token: accessToken
+        }, function(err, token) {
             if (err) return next();
 
             // Get user data associated with the token
             User.findById(token.userId, function(err, user) {
                 if (err) return next();
-                request.session.user = {
-                    fullName: user.fullName,
-                    phone: user.phone,
-                    email: user.email
-                };
+                request.user = user;
                 next();
             });
         });
@@ -77,14 +76,21 @@ module.exports = function(app) {
     });
 
     // Display account details for an individual user
-    app.get('/users/:id', /*auth,*/ function(request, response) {
-        response.send(request.param('id'));
-        User.findById(request.param('id'), function(err, user) {
+    app.get('/users/:id', auth, function(request, response) {
+        var requestId = request.param('id');
+
+        // The current logged in user can view their own information, but not
+        // anyone else's
+        if (request.user.id == requestId) {
             response.render('user', {
-                fullName: user.fullName,
-                phone: user.phone
+                title: 'User Profile Information',
+                user: request.user,
+                csrfToken: request.csrfToken()
             });
-        });
+        } else {
+            response.status(404);
+            response.send('No user found by given ID.');
+        }
     });
 
     // Create a new user, pending account verification
@@ -138,7 +144,7 @@ module.exports = function(app) {
                     });
 
                     tkn.save(function(err, doc) {
-                        request.session.accessToken = doc._id;
+                        request.session.accessToken = doc.token;
                         response.redirect('/users/'+u._id);
                     });
                 });
@@ -151,21 +157,100 @@ module.exports = function(app) {
 
     // Create a new access token, pending TFA verification
     app.post('/tokens', csrfCheck, function(request, response) {
+        // Test password match
+        User.findOne({
+            email: request.param('email')
+        }, function(err, user) {
+            if (err) {
+                request.session.error = 'E-Mail/Password Not Valid';
+                return response.redirect('/login');
+            }
 
+            user.comparePassword(request.param('password'), function(err, ok) {
+                if (!ok) {
+                    request.session.error = 'E-Mail/Password Not Valid';
+                    return response.redirect('/login');
+                }
+
+                // If the password is good, create a new access token that we
+                // can validate with two factor auth
+                var token = new AccessToken({
+                    userId: user._id
+                });
+
+                // After we save the token, we send the code via voice/SMS
+                // and show the verification UI
+                token.save(function(err, tkn) {
+                    if (err) {
+                        request.session.error = 'Login Error';
+                        return response.redirect('/login');
+                    }
+
+                    token.sendToken(function(err, data) {
+                        response.redirect('/tokens/'+tkn._id);
+                    });
+                });
+            });
+        });
     });
 
     // Enter verification code for a new access token
     app.get('/tokens/:id', function(request, response) {
+        AccessToken.findById(request.param('id'), function(err, tkn) {
+            if (err || !tkn) {
+                request.session.error = 'Invalid token ID';
+                return response.redirect('/login');
+            }
 
+            response.render('token_verify', {
+                csrfToken: request.csrfToken(),
+                title: 'Verify Your Account',
+                id: tkn.token
+            });
+        });
     });
 
     // Process verification code for a new access token
     app.post('/tokens/:id', csrfCheck, function(request, response) {
+        AccessToken.findOne({
+            token: request.param('id')
+        }, function(err, tkn) {
+            if (err || !tkn) {
+                console.log('>'+err);
+                request.session.error = 'Invalid token ID';
+                return response.redirect('/login');
+            }
 
+            // Check the code match
+            if (request.param('code') == tkn.confirmationCode) {
+                // Sweet - save the code as confirmed and save the ID in session
+                tkn.confirmed = true;
+                tkn.save(function(err) {
+                    if (err) {
+                        console.log('>>'+err);
+                        request.session.error = 'Verification Error.';
+                        return response.redirect('/login');
+                    }
+
+                    request.session.accessToken = tkn.token;
+                    response.redirect('/users/' + tkn.userId);
+                });
+            } else {
+                console.log('>>>'+err);
+                request.session.error = 'Invalid confirmation code.';
+                return response.redirect('/login');
+            }
+        });
     });
 
-    // Log out
+    // Log out - null out reference to access token and delete it
     app.post('/logout', csrfCheck, function(request, response) {
-
+        var id = request.session.accessToken;
+        AccessToken.findOneAndRemove({
+            _id: request.session.accessToken
+        }, function() {
+            request.session.accessToken = null;
+            response.redirect('/');
+        });
     });
 };

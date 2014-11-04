@@ -3,58 +3,11 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var bcrypt = require('bcrypt');
 var speakeasy = require('speakeasy');
-var twilio = require('twilio');
-var config = require('../config');
+var sender = require('./codesender');
 
 // Constants
 var SALT_WORK_FACTOR = 10; // protect password hash from brute force guessing
 var TOKEN_EXPIRY = 60 * 10; // expire confirmation tokens after ten minutes
-
-// A public service that simply echoes back TwiML that you pass it - we use
-// it here so we don't have to worry about knowing our app's URL ahead of time
-var twimlet = 'http://twimlets.com/echo?Twiml=';
-
-// Pre-set twilio TwiML response
-function twiml(confirmationCode) {
-    // Split up numbers so the user can hear each one individually
-    var numbers = confirmationCode.split('');
-    var twiml = new twilio.TwimlResponse();
-    twiml.say('Thank you for signing up. Your code is', {
-        voice: 'alice'
-    });
-
-    function appendCode(number) {
-        twiml.say(number, { voice: 'alice' });
-    }
-
-    // Say the number once...
-    numbers.forEach(appendCode);
-
-    // Prompt again...
-    twiml.say('Once again, your confirmation code is:', {
-        voice: 'alice'
-    });
-
-    // Say the number again...
-    numbers.forEach(appendCode);
-
-    // Prompt again...
-    twiml.say('One last time, your confirmation code is:', {
-        voice: 'alice'
-    });
-
-    // Say the number a final time...
-    numbers.forEach(appendCode);
-
-    // Terminate the TwiML markup
-    twiml.say('Thank you for registering!', { voice: 'alice' });
-
-    return twiml.toString();
-}
-
-// Create an authenticated Twilio REST API client to send messages
-// and make calls
-var client = twilio(config.accountSid, config.authToken);
 
 var UserSchema = new Schema({
     fullName: { 
@@ -136,20 +89,7 @@ UserSchema.methods.sendToken = function(cb) {
         // Return with database error if needed
         if (err) return cb(err);
 
-        // Send the new token over the requested channel
-        if (self.contactType === 'voice') {
-            client.makeCall({
-                to: self.phone,
-                from: config.twilioNumber,
-                url: twimlet + encodeURIComponent(twiml(self.confirmationCode))
-            }, cb);
-        } else {
-            client.sendMessage({
-                to: self.phone,
-                from: config.twilioNumber,
-                body: 'Your confirmation code is: '+ self.confirmationCode
-            }, cb);
-        }
+        sender(self.contactType, self.confirmationCode, self.phone, cb);
     });
 };
 

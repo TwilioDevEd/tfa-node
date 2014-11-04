@@ -6,3 +6,16 @@
 #account {
     float:right;
 }
+
+td, th {
+    padding:10px;
+}
+
+.login {
+    float:right;
+    margin:10px 5px 0 0;
+}
+
+.login input {
+    display:inline;
+}

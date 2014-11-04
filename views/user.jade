@@ -1,4 +1,14 @@
 extends layout
 
 block content
-  h1 user details
+  h1= user.fullName
+  table
+    tr
+      th Phone Number
+      td= user.phone
+    tr
+      th E-Mail Address
+      td= user.email
+    tr
+      th Contact Preference
+      td= user.contactType
