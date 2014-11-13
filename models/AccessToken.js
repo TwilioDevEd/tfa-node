@@ -6,9 +6,6 @@ var speakeasy = require('speakeasy');
 var User = require('./User');
 var sender = require('./codesender');
 
-// Constants
-var TOKEN_EXPIRY = 60 * 10; // expire confirmation tokens after ten minutes
-
 var AccessTokenSchema = new Schema({
     token: {
         type: String,
@@ -40,8 +37,7 @@ AccessTokenSchema.methods.sendToken = function(cb) {
 
     // Create a new confirmation code
     self.confirmationCode = speakeasy.totp({
-        key: self.secret,
-        step: TOKEN_EXPIRY
+        key: self.secret
     });
 
     // Update confirmation code in the DB

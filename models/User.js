@@ -7,7 +7,6 @@ var sender = require('./codesender');
 
 // Constants
 var SALT_WORK_FACTOR = 10; // protect password hash from brute force guessing
-var TOKEN_EXPIRY = 60 * 10; // expire confirmation tokens after ten minutes
 
 var UserSchema = new Schema({
     fullName: { 
@@ -80,8 +79,7 @@ UserSchema.methods.sendToken = function(cb) {
 
     // Create a new confirmation code
     self.confirmationCode = speakeasy.totp({
-        key: self.secret,
-        step: TOKEN_EXPIRY
+        key: self.secret
     });
 
     // Update confirmation code in the DB
