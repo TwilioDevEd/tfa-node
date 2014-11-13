@@ -19,3 +19,12 @@ td, th {
 .login input {
     display:inline;
 }
+
+#message {
+    padding:10px 10px 0 10px;
+    border-radius:5px;
+}
+
+#message p {
+    padding:0 0 10px 0;
+}

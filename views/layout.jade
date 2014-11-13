@@ -31,5 +31,11 @@ html(lang='en')
               span &nbsp;or&nbsp;
               a(href='/signup') Sign Up
 
+      // Display error or success messages
+      if message.length > 0
+        #message(class=error ? 'bg-danger' : 'bg-success')
+          each msg in message
+            p= msg
+
       // Yield to page content
       block content
