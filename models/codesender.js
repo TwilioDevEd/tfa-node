@@ -1,4 +1,5 @@
 var twilio = require('twilio');
+var VoiceResponse = twilio.twiml.VoiceResponse;
 var config = require('../config');
 
 // A public service that simply echoes back TwiML that you pass it - we use
@@ -13,7 +14,7 @@ var client = twilio(config.accountSid, config.authToken);
 function twiml(confirmationCode) {
     // Split up numbers so the user can hear each one individually
     var numbers = confirmationCode.split('');
-    var twiml = new twilio.TwimlResponse();
+    var twiml = new VoiceResponse();
     twiml.say('Your verification code is', {
         voice: 'alice'
     });
@@ -50,13 +51,13 @@ function twiml(confirmationCode) {
 module.exports = function(type, code, to, callback) {
     // Send the new token over the requested channel
     if (type === 'voice') {
-        client.makeCall({
+        client.api.calls.create({
             to: to,
             from: config.twilioNumber,
             url: twimlet + encodeURIComponent(twiml(code))
         }, callback);
     } else {
-        client.sendMessage({
+        client.api.messages.create({
             to: to,
             from: config.twilioNumber,
             body: 'Your confirmation code is: '+ code
