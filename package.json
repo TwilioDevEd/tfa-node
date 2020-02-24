@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/TwilioDevEd/tfa-node",
   "dependencies": {
-    "bcrypt": "^0.8.0",
+    "bcrypt": "^4.0.0",
     "body-parser": "^1.9.1",
     "connect-flash": "^0.1.1",
     "csurf": "^1.6.2",
