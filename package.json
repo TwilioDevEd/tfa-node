@@ -29,7 +29,7 @@
     "csurf": "^1.6.2",
     "express": "^4.10.0",
     "express-session": "^1.9.1",
-    "mongoose": "^3.8.18",
+    "mongoose": "^5.12.8",
     "morgan": "^1.4.1",
     "speakeasy": "^1.0.3",
     "twilio": "~3.0.0-rc.16"
